@@ -1,0 +1,102 @@
+<project name="textmining" default="create-jar">
+	<property name="version" value="1.0"/>
+
+	<fileset id="tm-src" dir="src">
+		<include name="**/*.java"/>
+	</fileset>
+	
+	<dirset id="tm-test-lib" dir="build">
+		<include name="bin"/>
+	</dirset>
+
+	<fileset id="tm-lib" dir="lib">
+		<include name="**/*.jar"/>
+		
+	</fileset>
+
+	<target name="create-jar" depends="build-tm">
+		<jar destfile="build/bin/tm-extractors-${version}.jar">
+			<fileset dir="build/bin">
+				<include name="**/*.*"/>
+			</fileset>			
+			<fileset dir="etc">
+				<include name="lgpl-2_1.txt"/>
+			</fileset>			
+		</jar> 
+	</target>
+
+	
+	<target name="prepare-src">   
+		<mkdir dir="build"/>
+		<mkdir dir="build/src"/>
+		<mkdir dir="build/bin"/>
+		<copy todir="build/src">    
+			<fileset dir="src">
+				<include name="org/textmining/extraction/*.java"/>
+				<include name="org/textmining/extraction/common/*.java"/>
+				<include name="org/textmining/extraction/word/**/*.java"/>				
+				<exclude name="**/test/**/*.java" />				
+			</fileset>
+		</copy>		
+	</target>
+	
+	<target name="prepare-test-src" depends="prepare-src">		
+		<mkdir dir="build/tests/src"/>
+		<mkdir dir="build/tests/bin"/>
+		<copy todir="build/tests/src">    
+			<fileset dir="src">				
+				<include name="org/textmining/extraction/word/test/*.java" />					
+			</fileset>
+		</copy>		
+	</target>
+
+	<target name="build-tm" depends="clean, prepare-src">
+		<javac destdir="build/bin" debug="off" compiler="modern" target="1.4" source="1.4">
+			<src path="build/src"/> 
+			<classpath>
+				<fileset refid="tm-lib"/>				
+			</classpath>
+		</javac> 
+	</target>
+	
+	<target name="build-tm-tests" depends="build-tm, prepare-test-src">
+			<javac destdir="build/tests/bin" debug="off" compiler="modern" target="1.4" source="1.4">
+				<src path="build/tests/src"/> 
+				<classpath>
+					<fileset refid="tm-lib"/>
+					<dirset refid="tm-test-lib"/>
+				</classpath>
+			</javac> 
+		</target>
+
+	<target name="run-tests" depends="build-tm-tests">
+		<junit showoutput="yes">
+			<classpath>
+				<fileset refid="tm-lib"/>
+				<dirset refid="tm-test-lib"/>
+				<pathelement location="build/tests/bin" />
+			</classpath>
+			<test name="org.textmining.extraction.word.test.TestWord97TextExtraction" haltonfailure="no" outfile="result97">
+			    <formatter type="xml"/>
+			 </test>
+			<test name="org.textmining.extraction.word.test.TestWord6TextExtraction" haltonfailure="no" outfile="result6">
+						    <formatter type="xml"/>
+						 </test>
+		<test name="org.textmining.extraction.word.test.TestWord2TextExtraction" haltonfailure="no" outfile="result2">
+					    <formatter type="xml"/>
+					 </test>		
+		</junit>
+	</target>
+	
+	<target name="clean" if="build.file.exists" depends="check-for-build-dir">
+		<delete includeemptydirs="true">
+			<fileset dir="build" includes="**/*"/>
+		</delete>
+	</target>
+
+	<target name="check-for-build-dir">
+		<available file="build" property="build.file.exists"/>
+	</target>
+
+	
+</project>
